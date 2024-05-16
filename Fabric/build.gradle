@@ -78,7 +78,7 @@ publishing {
 
 task publishCurseForge(type: TaskPublishCurseForge) {
 
-    apiToken = findProperty('api_token_paintings')
+    apiToken = findProperty('cf_api_token')
 
     // The main file to upload
     def mainFile = upload(341727, file("${project.buildDir}/libs/${archivesBaseName}-${version}.jar"))
@@ -87,5 +87,5 @@ task publishCurseForge(type: TaskPublishCurseForge) {
     mainFile.changelogType = 'markdown'
     mainFile.addJavaVersion('Java 17')
     mainFile.addRequirement('fabric-api')
-    mainFile.addRequirement('cardinal-components')
+    mainFile.addRequirement('cardinal-components-api')
 }
