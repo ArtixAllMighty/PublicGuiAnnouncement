@@ -1,7 +1,7 @@
 import net.darkhax.curseforgegradle.TaskPublishCurseForge
 
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
+    id 'fabric-loom' version '1.0-SNAPSHOT'
     id 'maven-publish'
     id 'idea'
     id 'net.darkhax.curseforgegradle' version '1.0.11'
@@ -12,7 +12,7 @@ archivesBaseName = "${mod_name}-fabric-${minecraft_version}"
 repositories {
     maven {
         name = "Ladysnake Mods"
-        url = 'https://ladysnake.jfrog.io/artifactory/mods'
+        url = 'https://maven.ladysnake.org/releases'
     }
 }
 
@@ -21,11 +21,10 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.1.0")
+    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.1.0")
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":Common")
-    // Replace modImplementation with modApi if you expose components in your own API
-    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.0.0-beta.1")
-    // Includes Cardinal Components API as a Jar-in-Jar dependency (optional but recommended)
-    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.0.0-beta.1")
 }
 
 loom {
@@ -58,12 +57,6 @@ processResources {
 
 tasks.withType(JavaCompile) {
     source(project(":Common").sourceSets.main.allSource)
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${mod_name}" }
-    }
 }
 
 publishing {
