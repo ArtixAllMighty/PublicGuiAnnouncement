@@ -12,14 +12,15 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'eclipse'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'net.minecraftforge.gradle' version '6+'
     id 'net.darkhax.curseforgegradle' version '1.0.11'
 }
 apply plugin: 'org.spongepowered.mixin'
 
-archivesBaseName = "${mod_name}-forge-${minecraft_version}"
+base {
+    archivesName = "${mod_name}-neoforge-${minecraft_version}"
+}
 
 minecraft {
     mappings channel: 'official', version: minecraft_version
@@ -41,7 +42,7 @@ minecraft {
             mods {
                 modClientRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
+                    source project(":common").sourceSets.main
                 }
             }
         }
@@ -55,7 +56,7 @@ minecraft {
             mods {
                 modServerRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
+                    source project(":common").sourceSets.main
                 }
             }
         }
@@ -70,7 +71,7 @@ minecraft {
             mods {
                 modDataRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
+                    source project(":common").sourceSets.main
                 }
             }
         }
@@ -82,15 +83,15 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.+:processor'
-    compileOnly project(":Common")
+    compileOnly project(":common")
 }
 
 tasks.withType(JavaCompile) {
-    source(project(":Common").sourceSets.main.allSource)
+    source(project(":common").sourceSets.main.allSource)
 }
 
 processResources {
-    from project(":Common").sourceSets.main.resources
+    from project(":common").sourceSets.main.resources
 
     filesMatching('*.mixins.json') {
         expand "refmap_target": "${mod_id}."
@@ -120,13 +121,16 @@ mixin {
     config "${mod_id}.mixins.json"
 }
 
-task publishCurseForge(type: TaskPublishCurseForge) {
+tasks.register('publishCurseForge', TaskPublishCurseForge) {
     apiToken = findProperty('cf_api_token')
 
     // The main file to upload
     def mainFile = upload(341727, jar)
-    mainFile.releaseType = 'beta'
+    mainFile.releaseType = "${releasetype}"
     mainFile.changelog = "${changelog}"
     mainFile.changelogType = 'markdown'
     mainFile.addJavaVersion('Java 17')
+    mainFile.addGameVersion("${minecraft_version}")
+    mainFile.addGameVersion("forge")
+    mainFile.addGameVersion("neoforge")
 }

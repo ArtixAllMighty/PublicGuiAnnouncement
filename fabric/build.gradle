@@ -1,9 +1,10 @@
 import net.darkhax.curseforgegradle.TaskPublishCurseForge
 
 plugins {
-    id 'fabric-loom' version '1.0-SNAPSHOT'
-    id 'maven-publish'
+    id 'java'
     id 'idea'
+    id 'maven-publish'
+    id 'fabric-loom' version '1.6-SNAPSHOT'
     id 'net.darkhax.curseforgegradle' version '1.0.11'
 }
 
@@ -14,6 +15,13 @@ repositories {
         name = "Ladysnake Mods"
         url = 'https://maven.ladysnake.org/releases'
     }
+    maven {
+        name = 'Curse Maven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
 }
 
 dependencies {
@@ -21,10 +29,10 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.1.0")
-    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.1.0")
+    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-base:${cardinal}")
+    modImplementation include("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${cardinal}")
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
-    implementation project(":Common")
+    implementation project(":common")
 }
 
 loom {
@@ -45,30 +53,24 @@ loom {
     }
 }
 
-
-processResources {
-    from project(":Common").sourceSets.main.resources
-    inputs.property "version", project.version
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
+tasks.withType(JavaCompile).configureEach {
+    source(project(":common").sourceSets.main.allSource)
+}
+tasks.withType(Javadoc).configureEach {
+    source(project(":common").sourceSets.main.allJava)
 }
 
-tasks.withType(JavaCompile) {
-    source(project(":Common").sourceSets.main.allSource)
+processResources {
+    from project(":common").sourceSets.main.resources
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version project.version
+            artifactId base.archivesName.get()
             from components.java
         }
     }
-
     repositories {
         maven {
             url "file://" + System.getenv("local_maven")
@@ -76,16 +78,17 @@ publishing {
     }
 }
 
-task publishCurseForge(type: TaskPublishCurseForge) {
-
+tasks.register('publishCurseForge', TaskPublishCurseForge) {
     apiToken = findProperty('cf_api_token')
-
     // The main file to upload
     def mainFile = upload(341727, file("${project.buildDir}/libs/${archivesBaseName}-${version}.jar"))
-    mainFile.releaseType = 'beta'
+    mainFile.releaseType = "${releasetype}"
     mainFile.changelog = "${changelog}"
     mainFile.changelogType = 'markdown'
     mainFile.addJavaVersion('Java 17')
+    mainFile.addGameVersion("${minecraft_version}")
+    mainFile.addGameVersion("fabric")
+    mainFile.addGameVersion("quilt")
     mainFile.addRequirement('fabric-api')
     mainFile.addRequirement('cardinal-components-api')
 }
